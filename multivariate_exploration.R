@@ -16,40 +16,14 @@ rm(list = ls())
 ##  ----------------------------------------------------------  ##
                   # Data Prep ####
 ##  ----------------------------------------------------------  ##
-# Read in example data
-flr <- read.csv("./flr-wide.csv")
+#install.packages("vegan")
+library(vegan)
 
-# Check what is in the dataframe
-colnames(flr)
-  ## Composite.Variable = year + management pasted together
-  ## Adaptive.Mgmt = essentially 'treatment' of the site where the flowers were counted
-  ## Year = SE
-  ## Site = 3-letter abbreviation for each site (site is a replicate for this study)
- ## ...
-  ## all-lowercase columns = species of flowering plant with number of flowers at each site in the cells
- ## ...
-  ## Abundance = number individuals at that site
-  ## Species.Density = number of species at that site
-  ## Diversity = Shannon-Weiner diversity index for that row
+# Get example lichen data from the vegan package
+data(varespec); data(varechem)
 
-# You may want a community matrix for some of the stuff we'll do as we go
-flr.rsp <- flr[,-c(1:4, (ncol(flr)-2):ncol(flr))]
-
-# Check to see if you were successful (no column names with capitalized letters)
-colnames(flr.rsp)
-
-# And some functions only play nice with things that count as matrices, so let's get one of those
-flr.mat <- as.matrix(flr.rsp)
-
-# To review, we have:
-  ## A traditional community dataframe
-class(flr)
-
-  ## Another without non-data columns
-ncol(flr) - ncol(flr.rsp)
-
-  ## And a matrix of community information
-class(flr.mat)
+# Check out the source if you're interested
+?varespec
 
 ##  ----------------------------------------------------------  ##
        # Principal Components Analysis ####
