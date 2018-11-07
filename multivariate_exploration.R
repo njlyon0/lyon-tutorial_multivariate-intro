@@ -25,9 +25,53 @@ data(varespec); data(varechem)
 # Check out the source if you're interested
 ?varespec
 
+# I do not find these dataframes to have valuable names though so let's change them a bit
+lichen.spp <- varespec
+lichen.chem <- varechem
+
 ##  ----------------------------------------------------------  ##
        # Principal Components Analysis ####
 ##  ----------------------------------------------------------  ##
+# PCA works best when the measured variables are highly correlated
+  # (It is easier to summarize the data by combining it when they obviously vary together)
+  # so check the correlation of our lichen species' cover with one another
+
+# Get the correlation matrix
+lichen.cor <- cor(lichen.spp)
+  ## Pretty unwieldy, right?
+  ## Fortunately, the correlation of A with B is equal to the correlation of B with A, so we can simplify
+
+# Ditch one triangle of the matrix (and the diagonal because A is 100% correlated with itself)
+lichen.cor[upper.tri(lichen.cor, diag = T)] <- NA
+lichen.cor
+
+# Better, but still a lot of NAs to scroll through, so let's go one step further:
+# Get a histogram of the correlations
+hist(lichen.cor, main = " ", xlab = "Correlation")
+  ## Looks like most of the lichen spp are not very correlated with one another
+
+# Still, better to take a worst-case and advance with it for when your data are not perfect, right?
+# Time to actually do PCA
+
+# Compute the principal components
+lichen.pca <- prcomp(varespec, scale = T)
+  ## This involves eigenvectors and eigenvalues
+  ## I suggest taking Dean Adams' spring course in Biostatistics if you really want to get into the math
+
+# Check 'em out
+summary(lichen.pca)
+  ## Keep an eye on the "Proportion of Variance" and "Cumulative Proportion" rows
+  ## Allows you to assess how good your principal components (PCs) are at summarizing your data
+  ## In this case: not very good
+
+# Once you've computed them though, you can use PCs in a frequentist statistical framework
+lichen.pca.data <- cbind(lichen.chem, lichen.pca$x)
+
+# F Test
+var.test(PC1 ~ c(rep("A", nrow(lichen.pca.data)/2), rep("B", nrow(lichen.pca.data)/2)),
+         data = lichen.pca.data)
+
+
 
 
 
