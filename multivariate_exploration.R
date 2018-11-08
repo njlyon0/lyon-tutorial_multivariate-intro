@@ -67,11 +67,16 @@ summary(lichen.pca)
 # Once you've computed them though, you can use PCs in a frequentist statistical framework
 lichen.pca.data <- cbind(lichen.chem, lichen.pca$x)
 
-# F Test
+# F Test on a pretend variable (just to demo how you can test it)
 var.test(PC1 ~ c(rep("A", nrow(lichen.pca.data)/2), rep("B", nrow(lichen.pca.data)/2)),
          data = lichen.pca.data)
 
-
+# Classic PCA plots might look something like:
+par(mfrow = c(1, 3))
+plot(x = lichen.pca$x[,1], y = lichen.pca$x[,2], pch = 20, xlab = "PC1", ylab = "PC2")
+plot(x = lichen.pca$x[,1], y = lichen.pca$x[,3], pch = 20, xlab = "PC1", ylab = "PC3")
+plot(x = lichen.pca$x[,2], y = lichen.pca$x[,3], pch = 20, xlab = "PC2", ylab = "PC3")
+par(mfrow = c(1, 1))
 
 
 
