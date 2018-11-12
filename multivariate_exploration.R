@@ -48,6 +48,7 @@ lichen.data$Group.Var.2 <- four.groups
 library(RRPP)
 
 # Model fitting works the same way it does in univariate frequentist statistics
+# This test is usually called a permutational multivariate ANOVA (perMANOVA)
 mod1 <- lm.rrpp(lichen.spp ~ Group.Var.2, data = lichen.data, iter = 9999)
   ## In this case we are testing how the whole community responds to our pretend grouping variable
   ## "iter" means the number of permutations (aka iterations) used to generate the distributions
@@ -56,7 +57,7 @@ mod1 <- lm.rrpp(lichen.spp ~ Group.Var.2, data = lichen.data, iter = 9999)
 anova(mod1, effect.type = "F")
   ## looks like the communities do happen to be different among the levels of our fake variable
 
-# The test can also handle univariate analysis
+# The test can also handle univariate analysis (perANOVA in that case)
 mod2 <- lm.rrpp(Callvulg ~ Group.Var.2, data = lichen.data, iter = 9999)
 anova(mod2, effect.type = "F")
 
@@ -67,9 +68,16 @@ summary(pairwise(mod2, fit.null = NULL, groups = lichen.data$Group.Var.2))
 # Once you've got that information you could go on to pick your favorite multiple comparison method
   ## Or do some visualization/whatever else you'd want
 
+# A full permutation procedure can be found in vegan
+?vegan::adonis
+
 ##  ----------------------------------------------------------  ##
       # Multivariate Data Visualization ####
 ##  ----------------------------------------------------------  ##
+
+
+
+
 
 
 
@@ -120,15 +128,101 @@ plot(x = lichen.pca$x[,1], y = lichen.pca$x[,3], pch = 20, xlab = "PC1", ylab = 
 plot(x = lichen.pca$x[,2], y = lichen.pca$x[,3], pch = 20, xlab = "PC2", ylab = "PC3")
 par(mfrow = c(1, 1))
 
+# Save a quick file of this out in case you want it later
+jpeg(file = "./Graphs/practice_pca.jpg")
+par(mfrow = c(1, 3))
+plot(x = lichen.pca$x[,1], y = lichen.pca$x[,2], pch = 20, xlab = "PC1", ylab = "PC2")
+plot(x = lichen.pca$x[,1], y = lichen.pca$x[,3], pch = 20, xlab = "PC1", ylab = "PC3")
+plot(x = lichen.pca$x[,2], y = lichen.pca$x[,3], pch = 20, xlab = "PC2", ylab = "PC3")
+par(mfrow = c(1, 1))
+dev.off()
+
 ##  ----------------------------------------------------------  ##
      # Nonmetric Multidimensional Scaling ####
 ##  ----------------------------------------------------------  ##
+# First you want to make your data-only dataframe into a matrix
+lichen.mat <- as.matrix(lichen.spp)
+str(lichen.mat)
+
+# Then compute distances/dissimilarities among observations (i.e. community differences)
+  ## Check your options
+?vegan::vegdist
+
+# Actually compute them
+lichen.dst <- vegan::vegdist(lichen.mat, method = "kulczynski")
+
+# You can see we have a huge matrix of pairwise dissimilarities now
+lichen.dst
+
+# Now you can actually do the multidimensional scaling part of NMS
+lichen.mds <- metaMDS(lichen.dst, distance = "kulczynski", engine = "monoMDS",
+                    autotransform = F, expand = F, k = 2, try = 100)
+  ## Many of these are defaults that I left in place to be explicit about what is being done
+
+# Check the stress that it reaches at
+lichen.mds$stress
+  ## ranges from 0 to 1 when engine = "monoMDS" (is a % with engine = "isoMDS")
+  ## Not terrible, but also not great
+
+# I wrote a function that conveniently (I think) does the whole aesthetic bit of creating NMS ordinations
+nms.4.ord <- function(mod, groupcol, g1, g2, g3, g4, lntp1 = 1, lntp2 = 1,
+                      lntp3 = 1, lntp4 = 1, legcont, legpos = "topright") {
+  ## mod = object returned by metaMDS
+  ## groupcol = group column in the dataframe that contains those (not the community matrix)
+  ## g1 - g4 = how each group appears in your dataframe (in quotes)
+  ## lntp1 - 4 = what sort of line each ellipse will be made of (accepts integers between 1 and 6 for diff lines)
+  ## legcont = single object for what you want the content of the legend to be
+  ## legpos = legend position, either numeric vector of x/y coords or shorthand accepted by "legend" function
+  
+  # Create plot
+  plot(mod, display = 'sites', choice = c(1, 2), type = 'none', xlab = "", ylab = "")
+  
+  # Set colors (easier for you to modify if we set this now and call these objects later)
+  col1 <- "#253494" # shades of bluish-green
+  col2 <- "#1d91c0" 
+  col3 <- "#41b6c4" 
+  col4 <- "#c7e9b4"
+  
+  # Add points for each group with a different color per group
+  points(mod$points[groupcol == g1, 1], mod$points[groupcol == g1, 2], pch = 21, bg = col1)
+  points(mod$points[groupcol == g2, 1], mod$points[groupcol == g2, 2], pch = 22, bg = col2)
+  points(mod$points[groupcol == g3, 1], mod$points[groupcol == g3, 2], pch = 23, bg = col3)
+  points(mod$points[groupcol == g4, 1], mod$points[groupcol == g4, 2], pch = 24, bg = col4)
+  ## As of right now the colors are colorblind safe and each group is also given its own shape
+  
+  # Get a single vector of your manually set line types for the ellipses
+  lntps <- c(lntp1, lntp2, lntp3, lntp4)
+  
+  # Ordinate SD ellipses around the centroid
+  library(vegan) # need this package for the following function
+  ordiellipse(mod, groupcol, col = c(g1 = col1, g2 = col2, g3 = col3, g4 = col4),
+              display = "sites", kind = "sd", lwd = 2, lty = lntps, label = F)
+  
+  # Add legend
+  legend(legpos, legend = legcont, bty = "n", 
+         pch = c(21, 22, 23, 24), cex = 1.15, 
+         pt.bg = c(col1, col2, col3, col4))
+  
+}
+
+# As far as I know, there's not another easier way of doing that (sorry)
+nms.4.ord(mod = lichen.mds, groupcol = lichen.data$Group.Var.2,
+          g1 = "A", g2 = "B", g3 = "C", g4 = "D",
+          legcont = c("A", "B", "C", "D"))
+
+# Let's re-run those pairwise comparisons from way long ago to see how well signficance lines up with ocular test
+summary(pairwise(mod1, fit.null = NULL, groups = lichen.data$Group.Var.2))
+  ## D is different from the other three groups and no other group is different from one another
+  ## (C is almost different from B and A depending on your critical point)
+
+# Save it!
+jpeg(file = "./Graphs/practice_nms.jpg")
+nms.4.ord(mod = lichen.mds, groupcol = lichen.data$Group.Var.2,
+          g1 = "A", g2 = "B", g3 = "C", g4 = "D",
+          legcont = c("A", "B", "C", "D"))
+dev.off()
 
 
-
-
-
-
-
+# END ####
 
 
