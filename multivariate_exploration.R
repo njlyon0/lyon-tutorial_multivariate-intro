@@ -74,12 +74,40 @@ summary(pairwise(mod2, fit.null = NULL, groups = lichen.data$Group.Var.2))
 ##  ----------------------------------------------------------  ##
       # Multivariate Data Visualization ####
 ##  ----------------------------------------------------------  ##
+# Let's say we want to visualize our data in three dimensions
+#install.packages("scatterplot3d")
+library(scatterplot3d)
 
+# Make the scatterplot
+s3d <- scatterplot3d(lichen.data$Callvulg, lichen.data$Empenigr, lichen.data$Rhodtome,
+                     xlab = "Callvulg", ylab = "Empenigr", zlab = "Rhodtome")
+  ## I don't think this is terribly useful here, but you can do it and it might make sense for other datasets
 
+# Scary face visualization method ("Chernoff Faces")
+# install.packages("TeachingDemos")
+library(TeachingDemos)
+lichen.spp.mat <- data.matrix(lichen.spp)
+faces2(lichen.spp.mat, labels = lichen.data$Group.Var.2, scale ="center")
 
+# The features are: 1 Width of center 2 Top vs. Bottom width (height of split) 3 Height of Face 4 Width of top half of face
+#                   5 Width of bottom half of face 6 Length of Nose 7 Height of Mouth 8 Curvature of Mouth (abs < 9)
+#                   9 Width of Mouth 10 Height of Eyes 11 Distance between Eyes (.5-.9) 12 Angle of Eyes/Eyebrows
+#                  13 Circle/Ellipse of Eyes 14 Size of Eyes 15 Position Left/Right of Eyeballs/Eyebrows
+#                  16 Height of Eyebrows 17 Angle of Eyebrows 18 Width of Eyebrows
 
+# I find these *super* creepy, so let's move on
 
+# I prefer starplots
+#install.packages("graphics")
+library(graphics)
 
+stars(lichen.spp, labels = lichen.data$Group.Var.2, key.loc = c(12, 0))
+
+# Let's take a look at a subset of the community (so that the legend is more interpretable)
+stars(lichen.spp[,-c(10:ncol(lichen.spp))], labels = lichen.data$Group.Var.2, key.loc = c(12, 2))
+  ## Better right?
+
+# Still works best with fewer variables though (more variables are tough to parse out of the legend)
 
 ##  ----------------------------------------------------------  ##
        # Principal Components Analysis ####
