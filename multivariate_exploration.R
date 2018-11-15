@@ -4,7 +4,7 @@
 # Written by Nicholas J Lyon
   ## Script modified from Manly & Navarro's "Multivariate Statistical Methods: A Primer" 4th Ed
 
-# Purpose ###
+# Purpose ####
   ## Explore and practice various multivariate analysis and visualization techniques
 
 # Set Working Directory
@@ -33,9 +33,9 @@ lichen.chem <- varechem
 lichen.data <- cbind(lichen.chem, lichen.spp)
 
 # Make some dummy group variables in case you want to practice analysis
-two.groups <- c(rep("A", nrow(lichen.pca.data)/2), rep("B", nrow(lichen.pca.data)/2))
-four.groups <- c(rep("A", nrow(lichen.pca.data)/4), rep("B", nrow(lichen.pca.data)/4),
-                 rep("C", nrow(lichen.pca.data)/4), rep("D", nrow(lichen.pca.data)/4))
+two.groups <- c(rep("A", nrow(lichen.data)/2), rep("B", nrow(lichen.data)/2))
+four.groups <- c(rep("A", nrow(lichen.data)/4), rep("B", nrow(lichen.data)/4),
+                 rep("C", nrow(lichen.data)/4), rep("D", nrow(lichen.data)/4))
 
 # Paste those groups into the larger dataframe
 lichen.data$Group.Var.1 <- two.groups
